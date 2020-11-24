@@ -1,12 +1,18 @@
 import cv2
 import numpy as np
+import time
 
 cap = cv2.VideoCapture(0)
-th = 170;
+cap.set(cv2.CAP_PROP_FPS, 5)
+th = 170
 e = 2
 d = 2
-while True:
-    _, frameOG = cap.read()
+
+if True:
+    # _, frameOG = cap.read()
+    # frameOG = cv2.imread('/home/julia/Downloads/dice/cube-689618_1920.jpg')
+    frameOG = cv2.imread('/home/julia/Downloads/dice/d4.jpg')
+
     hsv = cv2.cvtColor(frameOG, cv2.COLOR_BGR2HSV)
     gamma = 0.4
     lookUpTable = np.empty((1,256), np.uint8)
@@ -23,18 +29,22 @@ while True:
         _, filtered_image = cv2.threshold(frame_gray, 95, 255, cv2.THRESH_BINARY)
         e = 2
         d = 8
+        print("t1")
     elif (mean < 65):
         _, filtered_image = cv2.threshold(frame_gray, 130, 255, cv2.THRESH_BINARY)
         e = 7
         d = 12
+        print("t2")
     elif (mean < 111):
         _, filtered_image = cv2.threshold(frame_gray, 170, 255, cv2.THRESH_BINARY)
         e = 2
         d = 2
+        print("t3")
     elif (mean > 120):
         _, filtered_image = cv2.threshold(frame_gray, 235, 255, cv2.THRESH_BINARY)
-        e = 2
-        d = 5
+        e = 2*3
+        d = 5*3
+        print("t4")
     kernel_e = np.ones((e, e), np.uint8)
     kernel_d = np.ones((d, d), np.uint8)
     bi_image = cv2.erode(cv2.dilate(filtered_image, kernel_d), kernel_e)
@@ -52,7 +62,7 @@ while True:
         area = cv2.contourArea(contour)
         perimeter = cv2.arcLength(contour, True)
         
-        if ((perimeter > 10) and (perimeter < 100) and (len(approx) <= 10)):
+        if ((perimeter > 10) and (perimeter < 500) and (len(approx) <= 500)):
             #contour_list.append(contour)
             pics = []
             for i in range(bi_image.shape[0]):
@@ -61,13 +71,13 @@ while True:
                     if(raw == 1):
                         pics.append(bi_image[i, j])
                         #print(bi_image[i, j])
-            print(pics)
+            print('pics', pics)
             if(len(pics) > 0):
                 meanPic = sum(pics)/len(pics)
-                print(sum(pics))
+                print('pics sum', sum(pics))
                 meanPic = np.mean(pics)
                 #contour_list.append(contour)
-                if(meanPic < 10.0):
+                if(meanPic < 30.0):
                     #print(meanPic)
                     contour_list.append(contour)
             #        print(meanPic)
@@ -100,23 +110,25 @@ while True:
     cv2.imshow("Frame", frameOG)
     cv2.imshow("bw", bi_image)
     key = cv2.waitKey(1)
-    if key == 115:
+    if key == 115:  # s
         th = th + 5
         print(th)
-    if key == 97:
+    if key == 97:   # a
         th -= 5
         print(th)
-    if key == 119:
+    if key == 119:  # w
         e += 1
         print(e)
-    if key == 113:
+    if key == 113:  # q
         e -= 1
         print(e)
-    if key == 120:
+    if key == 120:  # x
         d += 1
         print(d)
-    if key == 122:
+    if key == 122:  # z
         d -= 1
         print(d)
-    if key == 27:
-        break
+    if key == 27:   # Esc
+        pass # break
+
+    key = cv2.waitKey(0)
