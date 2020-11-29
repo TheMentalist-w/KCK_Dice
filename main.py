@@ -5,7 +5,7 @@ def draw(frameOG, bi_image):
     cv2.imshow("Frame", frameOG)
     cv2.imshow("bw", bi_image)
 
-def contrast(frameOG, gamma):
+def gammaCor(frameOG, gamma):
     lookUpTable = np.empty((1,256), np.uint8)
     for i in range(256):
         lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
@@ -54,6 +54,7 @@ def main():
         _, frameOG = cap.read()
         mean, _ = cv2.meanStdDev(frameOG)
         mean = np.mean(mean)
+        #print(mean)
         
         if (mean < 30):
             th = 75
@@ -76,9 +77,11 @@ def main():
             e = 1
             d = 7
         
-        #contrast
-        frame = contrast(frameOG, 0.6)
-        
+        #gamma correction
+        #frame = gammaCor(frameOG, 0.6)
+        frame = np.zeros(frameOG.shape)
+        frame = cv2.convertScaleAbs(frameOG, alpha=1.2, beta=0)
+                
         #threshold
         bi_image = thresh(frame, th, e, d)
         
