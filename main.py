@@ -1,9 +1,8 @@
 import cv2
 import numpy as np   
 
-def draw(frameOG, frame, bi_image):
+def draw(frameOG, bi_image):
     cv2.imshow("Frame", frameOG)
-    cv2.imshow("Contrast", frame)
     cv2.imshow("bw", bi_image)
 
 def contrast(frameOG, gamma):
@@ -13,7 +12,7 @@ def contrast(frameOG, gamma):
     frame = cv2.LUT(frameOG, lookUpTable)
     return frame
 
-def tresh(frame, th, e, d):
+def thresh(frame, th, e, d):
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     _, filtered_image = cv2.threshold(frame_gray, th, 255, cv2.THRESH_BINARY)
         
@@ -50,48 +49,38 @@ def findDots(contours, bi_image):
 
 def main():
     cap = cv2.VideoCapture(0)
-    th = 135
-    e = 1
-    d = 6
-    gamma = 0.8
+    
     while True:
         _, frameOG = cap.read()
-        frameOG2 = frameOG.copy()
-        frameOGCon = frameOG.copy()
-        allContours = frameOG.copy()
         mean, _ = cv2.meanStdDev(frameOG)
-        print(mean)
         mean = np.mean(mean)
-        print(mean)
         
-        #if (mean < 30):
-        #    th = 65
-        #    e = 1
-        #    d = 2
-        #    gamma = 1.2
-        #elif (mean < 75):
-        #    th = 135
-        #    e = 1
-        #    d = 6
-        #    gamma = 0.8
-        #elif (mean < 85):
-        #    th = 190
-        #    e = 1
-        #    d = 5
-        #    gamma = 0.4
-        
+        if (mean < 30):
+            th = 75
+            e = 1
+            d = 6
+        elif (mean < 50):
+            th = 115
+            e = 1
+            d = 8
+        elif (mean < 85):
+            th = 155
+            e = 1
+            d = 7
+        elif (mean < 100):
+            th = 185
+            e = 1
+            d = 8
+        else:
+            th = 190
+            e = 1
+            d = 7
         
         #contrast
-        frame = contrast(frameOG, gamma)
-        
-        #frame_gray dla sprawozdania
-        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        
-        #frame_gray po threshold dla sprawozdania
-        _, filtered_image = cv2.threshold(frame_gray, th, 255, cv2.THRESH_BINARY)
+        frame = contrast(frameOG, 0.6)
         
         #threshold
-        bi_image = tresh(frame, th, e, d)
+        bi_image = thresh(frame, th, e, d)
         
         #findContours
         contours, hierarchy = cv2.findContours(bi_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -99,17 +88,13 @@ def main():
         #looking for black dots
         contour_list = findDots(contours, bi_image)
         
-        cv2.drawContours(allContours, contours, -1,(255, 0, 0), 2)
-        cv2.drawContours(frameOGCon, contour_list, -1, (255, 0, 0), 2)
         #draw contours
         if(len(contour_list) > 0): 
             for contour in contour_list:
                 ellipse = cv2.fitEllipse(contour)
                 cv2.ellipse(frameOG, ellipse, (0,255,0), 2)
         
-        print(len(contour_list)/2)
-        
-        draw(frameOG, frame, bi_image)
+        draw(frameOG, bi_image)
         
         #adjusting parameters
         key = cv2.waitKey(1)
@@ -132,14 +117,8 @@ def main():
             d -= 1
             print(d)
         if key == 32:
-            cv2.imwrite('frameOG.png', frameOG2)
-            cv2.imwrite('contrast.png', frame)
-            cv2.imwrite('frame_gray.png', frame_gray)
-            cv2.imwrite('filtered_image.png', filtered_image)
-            cv2.imwrite('closing.png', bi_image)
-            cv2.imwrite('allContours.png', allContours)
-            cv2.imwrite('ogContours.png', frameOGCon)
-            cv2.imwrite('finalResult.png', frameOG)
+            cv2.imwrite('Result.png', frameOG)
+            print(len(contour_list))
         if key == 27:
             break  
     cap.release()
