@@ -1,17 +1,6 @@
 import cv2
 import numpy as np   
 
-def draw(frameOG, bi_image):
-    cv2.imshow("Frame", frameOG)
-    cv2.imshow("bw", bi_image)
-
-def gammaCor(frameOG, gamma):
-    lookUpTable = np.empty((1,256), np.uint8)
-    for i in range(256):
-        lookUpTable[0,i] = np.clip(pow(i / 255.0, gamma) * 255.0, 0, 255)
-    frame = cv2.LUT(frameOG, lookUpTable)
-    return frame
-
 def thresh(frame, th, e, d):
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     _, filtered_image = cv2.threshold(frame_gray, th, 255, cv2.THRESH_BINARY)
@@ -54,10 +43,10 @@ def main():
         _, frameOG = cap.read()
         mean, _ = cv2.meanStdDev(frameOG)
         mean = np.mean(mean)
-        #print(mean)
+        
         
         if (mean < 30):
-            th = 75
+            th = 15
             e = 1
             d = 6
         elif (mean < 50):
@@ -77,11 +66,10 @@ def main():
             e = 1
             d = 7
         
-        #gamma correction
-        #frame = gammaCor(frameOG, 0.6)
+        #contrast
         frame = np.zeros(frameOG.shape)
         frame = cv2.convertScaleAbs(frameOG, alpha=1.2, beta=0)
-                
+
         #threshold
         bi_image = thresh(frame, th, e, d)
         
@@ -97,28 +85,11 @@ def main():
                 ellipse = cv2.fitEllipse(contour)
                 cv2.ellipse(frameOG, ellipse, (0,255,0), 2)
         
-        draw(frameOG, bi_image)
+        cv2.imshow("Frame", frameOG)
+        cv2.imshow("bw", bi_image)
         
         #adjusting parameters
         key = cv2.waitKey(1)
-        if key == 115:
-            th = th + 5
-            print(th)
-        if key == 97:
-            th -= 5
-            print(th)
-        if key == 119:
-            e += 1
-            print(e)
-        if key == 113:
-            e -= 1
-            print(e)
-        if key == 120:
-            d += 1
-            print(d)
-        if key == 122:
-            d -= 1
-            print(d)
         if key == 32:
             cv2.imwrite('Result.png', frameOG)
             print(len(contour_list))
