@@ -1,5 +1,6 @@
 import cv2
-import numpy as np   
+import numpy as np
+from time import strftime
 
 def thresh(frame, th, e, d):
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -18,11 +19,11 @@ def findDots(contours, bi_image):
         area = cv2.contourArea(contour)
         perimeter = cv2.arcLength(contour, True)
         
-        if ((perimeter > 30) and (perimeter < 100) and (len(approx) <= 10)):
+        if (perimeter > 30) and (perimeter < 100) and (len(approx) <= 10):
             pix = []
             M = cv2.moments(contour)
             cy = int(M['m10']/(M['m00']+0.01))
-            cx = int(M['m01']/(M['m00']+0.01))            
+            cx = int(M['m01']/(M['m00']+0.01))
             
             pix.append(bi_image[np.clip(cx - 1, 0, bi_image.shape[0]-1), np.clip(cy, 0, bi_image.shape[1]-1)])
             pix.append(bi_image[np.clip(cx + 1, 0, bi_image.shape[0]-1), np.clip(cy, 0, bi_image.shape[1]-1)])
@@ -30,9 +31,9 @@ def findDots(contours, bi_image):
             pix.append(bi_image[np.clip(cx, 0, bi_image.shape[0]-1), np.clip(cy + 1, 0, bi_image.shape[1]-1)])
             pix.append(bi_image[np.clip(cx, 0, bi_image.shape[0]-1), np.clip(cy, 0, bi_image.shape[1]-1)])
             
-            if(len(pix) > 0):
+            if len(pix):
                 meanPix = sum(pix)/len(pix)
-                if(meanPix <= 125):
+                if meanPix <= 125:
                     contour_list.append(contour)
     return contour_list
 
@@ -44,20 +45,19 @@ def main():
         mean, _ = cv2.meanStdDev(frameOG)
         mean = np.mean(mean)
         
-        
-        if (mean < 30):
+        if mean < 30:
             th = 15
             e = 1
             d = 6
-        elif (mean < 50):
+        elif mean < 50:
             th = 115
             e = 1
             d = 8
-        elif (mean < 85):
+        elif mean < 85:
             th = 155
             e = 1
             d = 7
-        elif (mean < 100):
+        elif mean < 100:
             th = 185
             e = 1
             d = 8
@@ -80,7 +80,7 @@ def main():
         contour_list = findDots(contours, bi_image)
         
         #draw contours
-        if(len(contour_list) > 0): 
+        if len(contour_list):
             for contour in contour_list:
                 ellipse = cv2.fitEllipse(contour)
                 cv2.ellipse(frameOG, ellipse, (0,255,0), 2)
@@ -90,10 +90,10 @@ def main():
         
         #adjusting parameters
         key = cv2.waitKey(1)
-        if key == 32:
-            cv2.imwrite('Result.png', frameOG)
+        if key == 32:   # Space
+            cv2.imwrite(strftime("Result-%d_%m-%H_%M_%S.png"), frameOG)
             print(len(contour_list))
-        if key == 27:
+        if key == 27:   # Esc
             break  
     cap.release()
 
